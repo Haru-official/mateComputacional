@@ -1,0 +1,134 @@
+<!DOCTYPE html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Ejecución - Fuerza Bruta</title>
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <style>
+        body { font-family: Arial; padding: 20px; display: flex; gap: 20px; background: #f4f7f6;}
+        .panel { background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd; }
+        #network { width: 500px; height: 400px; border: 1px solid #ccc; }
+        .controls button { padding: 10px; margin-right: 5px; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px;}
+        th, td { border: 1px solid #ddd; padding: 5px; text-align: center;}
+    </style>
+</head>
+<body>
+    <div class="panel">
+        <h2>Visualización del Algoritmo</h2>
+        <div id="network"></div>
+        <div class="controls" style="margin-top: 15px;">
+            <button onclick="start()">Iniciar</button>
+            <button onclick="pause()">Pausar</button>
+            <button onclick="step()">Paso a Paso</button>
+        </div>
+        <br>
+        <form action="/solucion" method="POST">
+            <input type="hidden" name="matriz" value='{{ matriz | tojson }}'>
+            <input type="hidden" name="letras" value='{{ letras | tojson }}'>
+            <button type="submit" id="btnResultados" style="padding:10px; background:green; color:white; border:none; border-radius:5px;" disabled>Ver Resultados Finales</button>
+        </form>
+    </div>
+
+    <div class="panel" style="flex-grow: 1;">
+        <h2>Progreso</h2>
+        <p><strong>Permutación actual:</strong> <span id="lblRuta">---</span></p>
+        <p><strong>Costo actual:</strong> <span id="lblCosto">---</span></p>
+        <p><strong>Mejor costo:</strong> <span id="lblMejor">Infinito</span></p>
+        
+        <h3>Registro</h3>
+        <div style="height: 350px; overflow-y: auto;">
+            <table id="tablaProgreso">
+                <tr><th>Eval #</th><th>Ruta</th><th>Costo</th><th>¿Ciclo Válido?</th></tr>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const matriz = {{ matriz | tojson }};
+        const letras = {{ letras | tojson }};
+        const n = {{ n }};
+        let network, edgesData;
+        
+        // Configurar Grafo
+        let nodes = letras.map((l, i) => ({id: i, label: l, color: '#007bff', font: {color: 'white'}}));
+        let edges = [];
+        for(let i=0; i<n; i++) {
+            for(let j=i+1; j<n; j++) {
+                if(matriz[i][j] > 0) edges.push({id: `${i}-${j}`, from: i, to: j, color: '#ccc'});
+            }
+        }
+        edgesData = new vis.DataSet(edges);
+        network = new vis.Network(document.getElementById('network'), {nodes: nodes, edges: edgesData}, {physics: false});
+
+        // Lógica de permutaciones para animación
+        let permutaciones = [];
+        function permutar(arr, memo = []) {
+            if (arr.length === 0) { permutaciones.push(memo); return; }
+            for (let i = 0; i < arr.length; i++) {
+                let curr = arr.slice();
+                let next = curr.splice(i, 1);
+                permutar(curr, memo.concat(next));
+            }
+        }
+        let intermedios = Array.from({length: n-1}, (_, i) => i + 1);
+        permutar(intermedios);
+
+        let currentIndex = 0;
+        let mejorCosto = Infinity;
+        let isRunning = false;
+        let interval;
+
+        function evaluateNext() {
+            if (currentIndex >= permutaciones.length) {
+                clearInterval(interval);
+                document.getElementById('btnResultados').disabled = false;
+                alert("Algoritmo finalizado. Puede ver los resultados.");
+                return;
+            }
+
+            let perm = permutaciones[currentIndex];
+            let rutaIndices = [0, ...perm, 0];
+            let rutaLetras = rutaIndices.map(i => letras[i]).join(" → ");
+            
+            let costo = 0;
+            let esValido = true;
+            
+            // Resetear colores de aristas
+            edgesData.forEach(e => edgesData.update({id: e.id, color: '#ccc', width: 1}));
+
+            for(let i=0; i<rutaIndices.length - 1; i++) {
+                let u = Math.min(rutaIndices[i], rutaIndices[i+1]);
+                let v = Math.max(rutaIndices[i], rutaIndices[i+1]);
+                let peso = matriz[u][v];
+                
+                if(peso === 0) { esValido = false; break; }
+                costo += peso;
+                
+                // Resaltar ruta actual en el grafo
+                edgesData.update({id: `${u}-${v}`, color: 'red', width: 3});
+            }
+
+            document.getElementById('lblRuta').innerText = rutaLetras;
+            document.getElementById('lblCosto').innerText = esValido ? costo : 'Inválido';
+
+            if(esValido && costo < mejorCosto) {
+                mejorCosto = costo;
+                document.getElementById('lblMejor').innerText = mejorCosto;
+            }
+
+            // Agregar a la tabla
+            let tbody = document.getElementById('tablaProgreso');
+            let tr = document.createElement('tr');
+            tr.innerHTML = `<td>${currentIndex + 1}</td><td>${rutaLetras}</td><td>${esValido ? costo : '-'}</td><td>${esValido ? 'Sí' : 'No'}</td>`;
+            tbody.insertBefore(tr, tbody.children[1]); // Insertar arriba
+
+            currentIndex++;
+        }
+
+        function start() { if(!isRunning){ isRunning = true; interval = setInterval(evaluateNext, 500); } }
+        function pause() { isRunning = false; clearInterval(interval); }
+        function step() { pause(); evaluateNext(); }
+    </script>
+</body>
+</html>

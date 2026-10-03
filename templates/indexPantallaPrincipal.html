@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card p-4 shadow-sm">
+            <div class="card-body text-center">
+                <h2 class="fw-bold text-primary mb-3">Problema del Agente Viajero (TSP)</h2>
+                <p class="text-muted mb-4">Resolución por Fuerza Bruta. Seleccione la cantidad de nodos y el método de generación del grafo ponderado.</p>
+                
+                <form id="configForm" method="POST" class="mb-4">
+                    <div class="mb-3 text-start">
+                        <label for="nodos" class="form-label fw-semibold">Número de Nodos ($n$ entre 5 y 10)[cite: 7]:</label>
+                        <input type="number" class="form-control form-control-lg" id="nodos" name="nodos" min="5" max="10" value="5" required
+                               oninput="document.getElementById('letraFinal').innerText = String.fromCharCode(64 + parseInt(this.value || 5))">
+                        <small class="text-muted">Rango de nodos: A - <span id="letraFinal" class="fw-bold">E</span></small>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
+                        <button type="submit" formaction="/aleatorio" class="btn btn-success btn-lg px-4">Generación Aleatoria</button>
+                        <button type="submit" formaction="/manual" class="btn btn-outline-primary btn-lg px-4">Construcción Manual</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
