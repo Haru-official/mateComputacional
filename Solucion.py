@@ -12,7 +12,9 @@ def solucion():
 
     # MOTOR PYTHON: Ejecución de Fuerza Bruta para encontrar la solución
     nodos_intermedios = list(range(1, n))
-    todas_permutaciones = list(itertools.permutations(nodos_intermedios))
+    # Se conserva solo una de las dos direcciones de cada ciclo (A-B-C-A y A-C-B-A son el mismo).
+    # Resultado: (n-1)!/2 ciclos distintos.
+    todas_permutaciones = [p for p in itertools.permutations(nodos_intermedios) if p[0] < p[-1]]
     
     ciclos = []
     for perm in todas_permutaciones:
@@ -28,11 +30,8 @@ def solucion():
             costo_total += peso
             
         if es_valido:
-            # Evitar duplicados inversos (A-B-C-A es igual a A-C-B-A en costo)
-            ruta_inversa = ruta[::-1]
-            if not any(c['ruta'] == ruta_inversa for c in ciclos):
-                ruta_letras = [letras[idx] for idx in ruta]
-                ciclos.append({'ruta_indices': ruta, 'ruta': ruta_letras, 'costo': costo_total})
+            ruta_letras = [letras[idx] for idx in ruta]
+            ciclos.append({'ruta_indices': ruta, 'ruta': ruta_letras, 'costo': costo_total})
 
     # Ordenar de menor a mayor costo
     ciclos.sort(key=lambda x: x['costo'])
