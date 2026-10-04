@@ -10,7 +10,7 @@
                 
                 <form id="configForm" method="POST" class="mb-4">
                     <div class="mb-3 text-start">
-                        <label for="nodos" class="form-label fw-semibold">Número de Nodos ($n$ entre 5 y 10)[cite: 7]:</label>
+                        <label for="nodos" class="form-label fw-semibold">Número de Nodos (n entre 5 y 10):</label>
                         <input type="number" class="form-control form-control-lg" id="nodos" name="nodos" min="5" max="10" value="5" required
                                oninput="document.getElementById('letraFinal').innerText = String.fromCharCode(64 + parseInt(this.value || 5))">
                         <small class="text-muted">Rango de nodos: A - <span id="letraFinal" class="fw-bold">E</span></small>
