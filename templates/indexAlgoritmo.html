@@ -64,7 +64,11 @@
         // Lógica de permutaciones para animación
         let permutaciones = [];
         function permutar(arr, memo = []) {
-            if (arr.length === 0) { permutaciones.push(memo); return; }
+            if (arr.length === 0) {
+                // Solo una dirección de cada ciclo: (n-1)!/2 ciclos distintos
+                if (memo[0] < memo[memo.length - 1]) permutaciones.push(memo);
+                return;
+            }
             for (let i = 0; i < arr.length; i++) {
                 let curr = arr.slice();
                 let next = curr.splice(i, 1);
